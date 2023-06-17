@@ -20,33 +20,70 @@ class ScoreSaver:
         except FileNotFoundError:
             pass
         return results
+    
+class PongGame:
+    def __init__(self, master, speed=3):
+            self.master = master
+            self.master.geometry("800x435")
+            self.master.title("Pong")
+            # logo_image = tk.PhotoImage(file="logo.png")
+            # self.master.iconphoto(True, logo_image)
 
-class StartScreen:
-    def __init__(self, master):
-        self.master = master
-        self.frame = tk.Frame(self.master, width=800, height=400)
-        self.frame.pack()
-        self.version = "Komputer"
+            self.speed = int(speed)
 
-        self.difficulty = tk.StringVar(value="Łatwy")
+            self.current_screen = None
 
-        self.difficulty_label = tk.Label(self.frame, text="Poziom trudności:")
-        self.difficulty_label.pack()
+            self.score_saver = ScoreSaver()
 
-        self.difficulty_menu = tk.OptionMenu(self.frame, self.difficulty, "Łatwy", "Średni", "Trudny")
-        self.difficulty_menu.pack()
+            self.show_choose_screen()
 
-        self.start_button = tk.Button(self.frame, text="Start", command=self.start_game)
+    def show_choose_screen(self):
+        self.clear_screen()
+        self.current_screen = ChooseScreen(self.master, self)
+
+    def show_start_screen1(self):
+        self.clear_screen()
+        self.current_screen = StartScreen1(self.master, self)
+
+    def show_start_screen2(self):
+        self.clear_screen()
+        self.current_screen = StartScreen2(self.master, self)
+
+    def show_game_screen(self, difficulty, speed = 3):
+        self.clear_screen()
+        self.current_screen = GameScreen(self.master, self, difficulty, speed)
+
+    def clear_screen(self):
+        if self.current_screen is not None:
+            self.current_screen.destroy()
+
+class ChooseScreen(tk.Frame):
+    def __init__(self, master, pong_game):
+        super().__init__(master, width=800, height=400)
+
+        self.canvas = tk.Canvas(self.master, width=600, height=250)
+        self.canvas.pack()
+
+        self.background_image = tk.PhotoImage(file="bg.png")
+        self.background = self.canvas.create_image(0, 0, anchor=tk.NW, image=self.background_image)
+
+        self.pong_game = pong_game
+        self.pack()
+
+        self.start_button = tk.Button(self, text="PvP", command=self.pvp, width=16)
         self.start_button.pack()
 
-        self.results_button = tk.Button(self.frame, text="Poprzednie Wyniki", command=self.show_previous_results)
+        self.start_button = tk.Button(self, text="Komputer", command=self.computer, width=16)
+        self.start_button.pack()
+
+        self.results_button = tk.Button(self, text="Poprzednie Wyniki", command=self.show_previous_results, width=16)
         self.results_button.pack()
 
-        self.quit_button = tk.Button(self.frame, text="Wyjdź", command=self.quit)
+        self.quit_button = tk.Button(self, text="Wyjdź", command=self.quit, width=16)
         self.quit_button.pack()
 
         self.score_saver = ScoreSaver()
-        
+
     def show_previous_results(self):
         results = self.score_saver.get_previous_results()
 
@@ -58,52 +95,129 @@ class StartScreen:
                 result_str += f"Gra {i}: {result[0]} - {result[1]} (Poziom trudności: {result[2]})\n"
             messagebox.showinfo("Poprzednie Wyniki", result_str)
 
-    def start_game(self):
-        difficulty = self.difficulty.get()
-        version = self.version
-        print(version)
-        self.master.destroy()  # Zniszcz okno startowe
-        root = tk.Tk()
-        root.title("Pong")
-        logo_image = tk.PhotoImage(file="logo.png")
-        root.iconphoto(True, logo_image)
-        game = PongGame(root, difficulty=difficulty, version=version)  # Przekazanie wartości difficulty jako argumentu
-        root.mainloop()
-    
-    def quit(self):
-        self.master.quit()
+    def computer(self):
+        self.canvas.destroy()
+        self.pong_game.show_start_screen1()
 
-class PongGame:
-    def __init__(self, master, difficulty, version):  # Dodaj argument difficulty
-        self.master = master
+    def pvp(self):
+        self.canvas.destroy()
+        self.pong_game.show_start_screen2()
+
+
+
+class StartScreen1(tk.Frame):
+    def __init__(self, master, pong_game):
+        super().__init__(master, width=800, height=400)
+
+        self.canvas = tk.Canvas(self.master, width=600, height=210)
+        self.canvas.pack()
+
+        self.background_image = tk.PhotoImage(file="bg1.png")
+        self.background = self.canvas.create_image(0, 0, anchor=tk.NW, image=self.background_image)
+
+        self.pong_game = pong_game
+        self.pack()
+
+        self.difficulty_var = tk.StringVar()
+        self.difficulty_var.set("Łatwy")
+
+        self.difficulty_label = tk.Label(self, text="Wybierz poziom trudności:")
+        self.difficulty_label.pack()
+
+        self.easy_radio = tk.Radiobutton(self, text="Łatwy", variable=self.difficulty_var, value="Łatwy")
+        self.easy_radio.pack(anchor="w")
+
+        self.medium_radio = tk.Radiobutton(self, text="Średni", variable=self.difficulty_var, value="Średni")
+        self.medium_radio.pack(anchor="w")
+
+        self.hard_radio = tk.Radiobutton(self, text="Trudny", variable=self.difficulty_var, value="Trudny")
+        self.hard_radio.pack(anchor="w")
+
+        self.start_button = tk.Button(self, text="Start", command=self.start_game, width=6)
+        self.start_button.pack()
+
+        self.back_button = tk.Button(self, text="Powrót", command=self.go_back, width=6)
+        self.back_button.pack()
+
+    def start_game(self):
+        self.pong_game.difficulty = self.difficulty_var.get()
+        print(self.pong_game.difficulty)
+        self.canvas.destroy()
+        self.pong_game.show_game_screen(self.pong_game.difficulty)
+
+    def go_back(self):
+        self.canvas.destroy()
+        self.pong_game.show_choose_screen()
+
+class StartScreen2(tk.Frame):
+    def __init__(self, master, pong_game):
+        super().__init__(master, width=800, height=400)
+
+        self.canvas = tk.Canvas(self.master, width=600, height=240)
+        self.canvas.pack()
+
+        self.background_image = tk.PhotoImage(file="bg2.png")
+        self.background = self.canvas.create_image(0, 0, anchor=tk.NW, image=self.background_image)
+
+        self.pong_game = pong_game
+        self.pack()
+
+        self.speed_var = tk.StringVar()
+        self.speed_var.set("3")
+
+        self.speed_label = tk.Label(self, text="Wybierz prędkość piłki:")
+        self.speed_label.pack()
+
+        self.speed_scale = tk.Scale(self, from_= 1, to= 7, orient="horizontal", variable=self.speed_var)
+        self.speed_scale.pack()
+
+        self.start_button = tk.Button(self, text="Start", command=self.start_game, width=6)
+        self.start_button.pack()
+
+        self.back_button = tk.Button(self, text="Powrót", command=self.go_back, width=6)
+        self.back_button.pack()
+
+    def start_game(self):
+        self.pong_game.speed = self.speed_var.get()
+        print(self.pong_game.speed)
+        self.canvas.destroy()
+        self.pong_game.show_game_screen("Na siebie", self.pong_game.speed)
+
+    def go_back(self):
+        self.canvas.destroy()
+        self.pong_game.show_choose_screen()
+
+class GameScreen(tk.Frame):
+    def __init__(self, master, pong_game, difficulty = "Na siebie", speed = 3):  # Dodać argument difficulty
+        super().__init__(master, width=800, height=400)
+        
         self.canvas = tk.Canvas(self.master, width=800, height=400)
         self.canvas.pack()
 
-        # Load the background image
-        self.background_image = tk.PhotoImage(file="tlo.png")
+        self.pong_game = pong_game
+        self.pack()
 
-        # Create the background image on the canvas
-        self.canvas.create_image(0, 0, anchor=tk.NW, image=self.background_image)
+        self.create_background()
 
         self.direction = random.choice([-1, 1])
         self.bdirection = 1
-        self.speed_x = 3
-        self.speed_y = 3
+        self.speed_x = int(speed)
+        self.speed_y = int(speed)
 
         self.score_a = 0
         self.score_b = 0
         self.scoreboard = self.canvas.create_text(400, 50, text="0 : 0", fill="white", font=("Arial", 30))
 
-        self.menu_frame = tk.Frame(self.master)
-        self.menu_frame.pack()
+        # self.menu_frame = tk.Frame(self.master)
+        # self.menu_frame.pack()
 
-        self.start_button = tk.Button(self.menu_frame, text="Start", command=self.start_game)
+        self.start_button = tk.Button(self, text="Start", command=self.start_game)
         self.start_button.pack(side=tk.LEFT)
 
-        self.go_back_button = tk.Button(self.menu_frame, text="Powrót", command=self.go_back)
+        self.go_back_button = tk.Button(self, text="Powrót", command=self.go_back)
         self.go_back_button.pack(side=tk.RIGHT)
 
-        self.reset_button = tk.Button(self.menu_frame, text="Reset", command=self.reset_game)
+        self.reset_button = tk.Button(self, text="Reset", command=self.reset_game)
         self.reset_button.pack()
 
         self.score_saver = ScoreSaver()
@@ -113,6 +227,9 @@ class PongGame:
 
         self.create_objects()
 
+    def create_background(self):
+        self.background_image = tk.PhotoImage(file="tlo.png")
+        self.background = self.canvas.create_image(0, 0, anchor=tk.NW, image=self.background_image)
 
     def create_objects(self):
         self.ball = self.canvas.create_oval(395, 195, 405, 205, fill="white", outline="black", width=1)
@@ -120,13 +237,24 @@ class PongGame:
         self.paddle_b = self.canvas.create_rectangle(770, 150, 790, 250, fill="red", outline="black", width=1)
 
     def bind_events(self):
-        self.canvas.bind_all("<KeyPress-Up>", self.move_paddle_a_up)
-        self.canvas.bind_all("<KeyPress-Down>", self.move_paddle_a_down)
+        if self.poziom == "Na siebie":
+            self.canvas.bind_all("<KeyPress-Up>", self.move_paddle_a_up)
+            self.canvas.bind_all("<KeyPress-Down>", self.move_paddle_a_down)
+            self.canvas.bind_all("<w>", self.move_paddle_b_up)
+            self.canvas.bind_all("<s>", self.move_paddle_b_down)
+            self.canvas.bind_all("<W>", self.move_paddle_b_up)
+            self.canvas.bind_all("<S>", self.move_paddle_b_down)
+        else:
+            self.canvas.bind_all("<KeyPress-Up>", self.move_paddle_a_up)
+            self.canvas.bind_all("<KeyPress-Down>", self.move_paddle_a_down)
 
     def go_back(self):
-        self.stop_game()  # Stop the game if it's running
-        self.master.destroy()  # Destroy the PongGame window
-        start_screen = StartScreen(tk.Tk())  # Create a new StartScreen window
+        self.stop_game()  # Zatrzymaj gre
+        self.canvas.destroy() #Usuń canve
+        if self.poziom == "Na siebie":
+            self.pong_game.show_start_screen2()  
+        else:
+            self.pong_game.show_start_screen1()
 
     def start_game(self):
         self.bind_events()
@@ -134,16 +262,13 @@ class PongGame:
         self.canvas.focus_set()
 
         self.reset_ball()  # Zresetuj pozycje piłki
-        self.move_ball()
-        self.move_paddle_b()
+        self.move_ball() # Rusz piłkę
+        self.move_paddle_b() # Rusz paletkę b (Komputer)
 
         difficulty = self.difficulty.get()
         if difficulty == "Trudny":
             self.speed_x = 5
             self.speed_y = 5
-        else:
-            self.speed_x = 3
-            self.speed_y = 3
 
     def stop_game(self):
         self.canvas.unbind_all("<KeyPress-Up>")
@@ -151,11 +276,11 @@ class PongGame:
         self.start_button.config(state="disabled")
 
         if hasattr(self, 'move_ball_id'):
-            self.master.after_cancel(self.move_ball_id)  # Cancel the scheduled move_ball method
+            self.master.after_cancel(self.move_ball_id)  # Usuń zakolejkowaną metode move_ball
             del self.move_ball_id
 
         if hasattr(self, 'move_paddle_b_id'):
-            self.master.after_cancel(self.move_paddle_b_id)  # Cancel the scheduled move_paddle_b method
+            self.master.after_cancel(self.move_paddle_b_id)  # Usuń zakolejkowaną metodę move_paddle_b
             del self.move_paddle_b_id
 
     def is_game_over(self):
@@ -196,9 +321,12 @@ class PongGame:
         self.update_scoreboard()
 
         if self.is_game_over():
-            self.game_over("Gracz 1" if self.score_a == 5 else "Komputer")
+            if self.poziom == "Na siebie":
+                self.game_over("Gracz 1" if self.score_a == 5 else "Gracz 2")
+            else:
+                self.game_over("Gracz 1" if self.score_a == 5 else "Komputer")
         else:
-            self.move_ball_id = self.master.after(10, self.move_ball)  # Store the after method ID
+            self.move_ball_id = self.master.after(10, self.move_ball)
         self.canvas.move(self.ball, self.speed_x * self.direction, self.speed_y)
 
     def reset_ball(self):
@@ -216,9 +344,6 @@ class PongGame:
         if difficulty == "Trudny":
             self.speed_x = 5
             self.speed_y = 5
-        else:
-            self.speed_x = 3
-            self.speed_y = 3
 
         if self.is_game_over():
             self.stop_game()  # Zatrzymaj grę, jeśli piłka została zresetowana po zakończeniu gry
@@ -232,6 +357,16 @@ class PongGame:
         paddle_a_pos = self.canvas.coords(self.paddle_a)
         if paddle_a_pos[3] < 400:
             self.canvas.move(self.paddle_a, 0, 20)
+
+    def move_paddle_b_up(self, event):
+        paddle_b_pos = self.canvas.coords(self.paddle_b)
+        if paddle_b_pos[1] > 0:
+            self.canvas.move(self.paddle_b, 0, -20)
+
+    def move_paddle_b_down(self, event):
+        paddle_b_pos = self.canvas.coords(self.paddle_b)
+        if paddle_b_pos[3] < 400:
+            self.canvas.move(self.paddle_b, 0, 20)
 
     def move_paddle_b(self):
         if self.is_game_over():
@@ -264,14 +399,22 @@ class PongGame:
             elif ball_pos[3] > paddle_b_pos[3]:
                 self.canvas.move(self.paddle_b, 0, 2)
 
-        self.move_paddle_b_id = self.master.after(10, self.move_paddle_b)  # Store the after method ID
+        self.move_paddle_b_id = self.master.after(10, self.move_paddle_b) 
 
     def update_scoreboard(self):
         self.canvas.itemconfig(self.scoreboard, text=f"{self.score_a} : {self.score_b}")
 
     def game_over(self, winner):
-        self.canvas.unbind_all("<KeyPress-Up>")
-        self.canvas.unbind_all("<KeyPress-Down>")
+        if self.poziom == "Na siebie":
+            self.canvas.unbind_all("<KeyPress-Up>")
+            self.canvas.unbind_all("<KeyPress-Down>")
+            self.canvas.unbind_all("<w>")
+            self.canvas.unbind_all("<s>")
+            self.canvas.unbind_all("<W>")
+            self.canvas.unbind_all("<S>")
+        else:
+            self.canvas.unbind_all("<KeyPress-Up>")
+            self.canvas.unbind_all("<KeyPress-Down>")
 
         self.canvas.create_text(400, 350, text=f"{winner} wygrywa!", fill="white", font=("Arial", 30))
 
@@ -281,6 +424,7 @@ class PongGame:
     
     def reset_game(self):
         self.canvas.delete("all")
+        self.create_background()
         self.create_objects()
         self.bind_events()
         self.stop_game()
@@ -289,13 +433,14 @@ class PongGame:
         self.direction = random.choice([-1, 1])
         self.score_a = 0
         self.score_b = 0
-        self.scoreboard = self.canvas.create_text(400, 50, text="0 : 0", fill="white", font=("Arial", 20))  # Recreate the scoreboard
+        self.scoreboard = self.canvas.create_text(400, 50, text="0 : 0", fill="white", font=("Arial", 30)) 
         self.update_scoreboard()
+
 
 if __name__ == "__main__":
     root = tk.Tk()
     root.title("Pong")
     logo_image = tk.PhotoImage(file="logo.png")
     root.iconphoto(True, logo_image)
-    start_screen = StartScreen(root)
+    game = PongGame(root)
     root.mainloop()
