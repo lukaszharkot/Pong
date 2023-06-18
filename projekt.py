@@ -71,16 +71,16 @@ class ChooseScreen(tk.Frame):
         self.pack()
 
         self.start_button = tk.Button(self, text="PvP", command=self.pvp, width=16)
-        self.start_button.pack()
+        self.start_button.pack(pady=2)
 
         self.start_button = tk.Button(self, text="Komputer", command=self.computer, width=16)
-        self.start_button.pack()
+        self.start_button.pack(pady=2)
 
         self.results_button = tk.Button(self, text="Poprzednie Wyniki", command=self.show_previous_results, width=16)
-        self.results_button.pack()
+        self.results_button.pack(pady=2)
 
         self.quit_button = tk.Button(self, text="Wyjdź", command=self.quit, width=16)
-        self.quit_button.pack()
+        self.quit_button.pack(pady=2)
 
         self.score_saver = ScoreSaver()
 
@@ -134,10 +134,10 @@ class StartScreen1(tk.Frame):
         self.hard_radio.pack(anchor="w")
 
         self.start_button = tk.Button(self, text="Start", command=self.start_game, width=6)
-        self.start_button.pack()
+        self.start_button.pack(pady=2)
 
         self.back_button = tk.Button(self, text="Powrót", command=self.go_back, width=6)
-        self.back_button.pack()
+        self.back_button.pack(pady=2)
 
     def start_game(self):
         self.pong_game.difficulty = self.difficulty_var.get()
@@ -172,10 +172,10 @@ class StartScreen2(tk.Frame):
         self.speed_scale.pack()
 
         self.start_button = tk.Button(self, text="Start", command=self.start_game, width=6)
-        self.start_button.pack()
+        self.start_button.pack(pady=2)
 
         self.back_button = tk.Button(self, text="Powrót", command=self.go_back, width=6)
-        self.back_button.pack()
+        self.back_button.pack(pady=2)
 
     def start_game(self):
         self.pong_game.speed = self.speed_var.get()
@@ -387,17 +387,17 @@ class GameScreen(tk.Frame):
             # Przeciwnik (paletka B) podąża za piłką
             ball_pos = self.canvas.coords(self.ball)
             if ball_pos[1] < paddle_b_pos[1]:
-                self.canvas.move(self.paddle_b, 0, -1)
+                self.canvas.move(self.paddle_b, 0, -0.9)
             elif ball_pos[3] > paddle_b_pos[3]:
-                self.canvas.move(self.paddle_b, 0, 1)
+                self.canvas.move(self.paddle_b, 0, 0.9)
 
         elif difficulty == "Trudny":
             # Przeciwnik (paletka B) podąża za piłką ze zwiększoną prędkością
             ball_pos = self.canvas.coords(self.ball)
             if ball_pos[1] < paddle_b_pos[1]:
-                self.canvas.move(self.paddle_b, 0, -2)
+                self.canvas.move(self.paddle_b, 0, -4)
             elif ball_pos[3] > paddle_b_pos[3]:
-                self.canvas.move(self.paddle_b, 0, 2)
+                self.canvas.move(self.paddle_b, 0, 4)
 
         self.move_paddle_b_id = self.master.after(10, self.move_paddle_b) 
 
